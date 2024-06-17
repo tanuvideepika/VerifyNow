@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Now</title>
+    <link rel="icon" href="../images/favicon.png" type="image/png">
+    <link rel="stylesheet" href="../static/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
+
+</head>
+<body>
+    <!-- <h1>NEWS CREDIBILITY CHECKER</h1> -->
+    <nav class="navbar">
+        <img src="../static/tick.png" alt="Logo" class="logo">
+        <h1 class="navbar-title">Verify Now</h1>
+    </nav>
+    <form id="newsForm">
+        <label for="news_text">Enter News Text:</label><br>
+        <textarea id="news_text" name="news_text" rows="4" cols="50"></textarea><br><br>
+        <button type="submit" id="submit_button" onclick="myScript(event)">Check Credibility</button>
+    </form>
+    <h2 id="prediction"></h2>
+    <h2 id="credibility_score"></h2>
+    <canvas id="gaugeCanvas" width="400" height="200"></canvas>
+    <script>
+        var canvas = document.getElementById('gaugeCanvas');
+        var ctx = canvas.getContext('2d');
+        
+        function drawGauge(score) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw the background arc
+            ctx.beginPath();
+            ctx.arc(200, 200, 150, Math.PI, 2 * Math.PI);
+            ctx.lineWidth = 20;
+            ctx.strokeStyle = '#f44336'; // Red
+            ctx.stroke();
+            ctx.closePath();
+
+            // Draw the foreground arc
+            ctx.beginPath();
+            ctx.arc(200, 200, 150, Math.PI, Math.PI + (score / 100) * Math.PI);
+            ctx.lineWidth = 20;
+            ctx.strokeStyle = '#4caf50'; // Green
+            ctx.stroke();
+            ctx.closePath();
+
+            // Draw the text
+            ctx.font = '30px Arial';
+            ctx.fillStyle = '#000';
+            ctx.textAlign = 'center';
+            ctx.fillText(score + '%', 200, 180);
+        }
+        drawGauge(0);
+
+        function myScript(event) {
+            event.preventDefault();
+            var newsText = document.getElementById('news_text').value;
+            
+            fetch('/predict', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ news_text: newsText }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                var score = data.credibility_score;
+                drawGauge(score);
+                document.getElementById('prediction').innerText = 'Prediction: ' + (data.prediction == 0 ? 'Fake' : 'Real');
+                document.getElementById('credibility_score').innerText = 'Credibility Score: ' + score + '%';
+            });
+        }
+    </script>
+</body>
+</html>
